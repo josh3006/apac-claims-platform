@@ -27,3 +27,10 @@ This is a running record of the actual conversation and implementation. AI imple
 ## Validation record
 
 Actual command results are recorded in `docs/VALIDATION.md` after execution. Do not claim a Docker or Kafka integration run from an H2-only test.
+
+## Corrections driven by checks
+
+- Initial workflow tests caught an incorrect returned version caused by using the original entity after JPA merge with a manually assigned UUID. AI changed the version to nullable `Long` for new-entity detection and used the managed object returned by `saveAndFlush`.
+- The real Basic-auth test caught missing `{bcrypt}` prefixes for Spring's delegating password encoder. AI corrected the stored encoded password format.
+- Angular compilation caught an incorrect bootstrap configuration shape. AI passed `{ providers: [...] }` rather than a provider array.
+- No browser was connected (runtime discovery returned no available browsers); browser interaction remains unverified. AI did not claim UI testing from compilation.

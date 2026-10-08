@@ -19,8 +19,8 @@ class SecurityConfig {
                              @Value("${app.officer-password}") String officerPassword) {
         var encoder = new BCryptPasswordEncoder();
         return new InMemoryUserDetailsManager(
-            User.withUsername("claimant").password(encoder.encode(claimantPassword)).roles("CLAIMANT").build(),
-            User.withUsername("officer").password(encoder.encode(officerPassword)).roles("OFFICER").build());
+            User.withUsername("claimant").password("{bcrypt}" + encoder.encode(claimantPassword)).roles("CLAIMANT").build(),
+            User.withUsername("officer").password("{bcrypt}" + encoder.encode(officerPassword)).roles("OFFICER").build());
     }
 
     @Bean

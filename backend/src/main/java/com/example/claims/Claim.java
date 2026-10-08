@@ -14,7 +14,7 @@ class Claim {
     enum Status { SUBMITTED, UNDER_REVIEW, INFORMATION_REQUIRED, SETTLED, REJECTED }
     enum Type { MOTOR, PROPERTY }
     @Id UUID id = UUID.randomUUID();
-    @Version long version;
+    @Version Long version;
     @Column(nullable = false) String claimant;
     @Enumerated(EnumType.STRING) Type type;
     String market;

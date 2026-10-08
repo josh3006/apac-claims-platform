@@ -103,7 +103,7 @@ class ClaimService {
         if (!user.getName().equals(c.assignedOfficer)) throw error(HttpStatus.FORBIDDEN, "Only the assigned officer may assess this claim");
     }
     private ClaimView save(Claim c) {
-        claims.saveAndFlush(c); // Flush increments @Version before returning the response.
+        c = claims.saveAndFlush(c); // Use the managed instance, with the incremented @Version.
         outbox.save(new OutboxEvent(c)); // Same DB transaction: either claim + event both persist, or neither does.
         return ClaimView.from(c);
     }
