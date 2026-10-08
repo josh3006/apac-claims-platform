@@ -74,3 +74,5 @@ The six market codes MY/SG/HK/TH/ID/VN and their currencies are demo assumptions
 Java 21 and Spring Boot 3.5 keep the implementation in the user's familiar ecosystem. Angular 20 meets the required frontend framework without extra UI libraries. H2 gives a quick standalone run; PostgreSQL is the Docker database. Maven and npm lockfiles/builds make checks repeatable. Docker Compose describes the full local topology.
 
 Official references used when selecting tooling: [Spring Boot 3.5 requirements](https://docs.spring.io/spring-boot/3.5/system-requirements.html) and [Angular version compatibility](https://angular.dev/reference/versions).
+
+The named Kafka volume uses the image's prepared `/var/lib/kafka/data` directory; the [official Kafka 3.9.1 Dockerfile](https://github.com/apache/kafka/blob/3.9.1/docker/jvm/Dockerfile) creates it and assigns it to the container user. This source check does not replace an actual Compose startup test.

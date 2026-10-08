@@ -7,6 +7,7 @@
 - Workflow integration tests use Spring Boot, Spring Security, MockMvc, and H2: real Basic authentication, role/ownership checks, input validation, information exchange, settlement/rejection, stale versions, history, outbox count, and currency-separated dashboard.
 - Publisher unit tests mock the Kafka client: broker acknowledgement marks publication, failure keeps the event pending, payload includes IDs/version and excludes personal free text. This is not a live broker test.
 - Angular production compilation using Node 22.13.1: strict TypeScript/template checking passed. Initial production bundle: approximately 255 kB raw / 72 kB estimated transfer.
+- Clean lockfile install through `scripts/npm.ps1 ci --no-audit --no-fund`, followed by `scripts/npm.ps1 run build`: passed with Node 22, confirming the Windows helper and reproducible dependency install. The first clean-install attempt hit a Windows file lock while the dev server was running; stopping the temporary server resolved it.
 - Live executable jar on port 18080 with in-memory H2: `scripts/smoke.ps1 -BaseUrl http://localhost:18080` completed submission → pickup → request information → response → settlement. Verified five history entries and dashboard settlement total.
 - Angular development server on port 14200 served the HTML and proxied authenticated `/api/me` to the live backend on 18080.
 - `docker compose config --quiet`: passed.
