@@ -1,0 +1,5 @@
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0">
+  <!-- Isolate this standalone assessment from unrelated global corporate repositories. -->
+  <mirrors><mirror><id>assessment-central</id><mirrorOf>*</mirrorOf><url>https://repo.maven.apache.org/maven2</url></mirror></mirrors>
+  <localRepository>${user.dir}/target/maven-cache</localRepository>
+</settings>

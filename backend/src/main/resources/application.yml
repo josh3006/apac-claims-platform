@@ -1,0 +1,27 @@
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:h2:file:./data/claims}
+    username: ${DB_USER:sa}
+    password: ${DB_PASSWORD:}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+  kafka:
+    bootstrap-servers: ${KAFKA_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      properties:
+        delivery.timeout.ms: 10000
+        request.timeout.ms: 5000
+        max.block.ms: 5000
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+app:
+  events-enabled: ${EVENTS_ENABLED:false}
+  claimant-password: ${CLAIMANT_PASSWORD:claimant-demo}
+  officer-password: ${OFFICER_PASSWORD:officer-demo}

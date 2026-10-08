@@ -1,0 +1,58 @@
+<header><div><p class="eyebrow">APAC · assessment prototype</p><h1>Claims desk</h1></div>
+  @if (user) { <div>{{ user.username }} · {{ user.role }} <button class="secondary" (click)="logout()" [disabled]="busy">Sign out</button></div> }
+</header>
+<main>
+  @if (error) { <p class="error" role="alert">{{ error }}</p> }
+  @if (notice) { <p class="notice" role="status">{{ notice }}</p> }
+  @if (!user) {
+    <section class="login"><h2>Sign in</h2><p>Track your claim or manage the team's queue.</p>
+      <form (ngSubmit)="login()" #loginForm="ngForm">
+        <label>Username<input name="username" [(ngModel)]="username" required autocomplete="username"></label>
+        <label>Password<input name="password" type="password" [(ngModel)]="password" required autocomplete="current-password"></label>
+        <button [disabled]="busy || loginForm.invalid">{{ busy ? 'Signing in…' : 'Sign in' }}</button>
+      </form><p class="muted">Demo claimant: claimant / claimant-demo<br>Demo officer: officer / officer-demo</p>
+    </section>
+  } @else {
+    @if (dashboard && user.role === 'OFFICER') {
+      <section><h2>Team overview</h2><div class="metrics">
+        <div><h3>Claims by status</h3>@for (item of dashboard.byStatus | keyvalue; track item.key) { <p>{{ item.key.replaceAll('_', ' ') }} <strong>{{ item.value }}</strong></p> }</div>
+        <div><h3>Open workload</h3>@for (item of dashboard.workloadByOfficer | keyvalue; track item.key) { <p>{{ item.key }} <strong>{{ item.value }}</strong></p> } @empty { <p>No open claims</p> }</div>
+        <div><h3>Outstanding estimates</h3>@for (item of dashboard.outstandingExposureByCurrency | keyvalue; track item.key) { <p>{{ item.key }} <strong>{{ item.value | number:'1.2-2' }}</strong></p> } @empty { <p>No outstanding exposure</p> }<small>Submitted estimates, grouped by currency.</small></div>
+        <div><h3>Settled amounts</h3>@for (item of dashboard.settledAmountByCurrency | keyvalue; track item.key) { <p>{{ item.key }} <strong>{{ item.value | number:'1.2-2' }}</strong></p> } @empty { <p>No settlements yet</p> }</div>
+      </div></section>
+    }
+    @if (user.role === 'CLAIMANT') {
+      <section><h2>Report an incident</h2><form (ngSubmit)="submit()" #claimForm="ngForm">
+        <div class="form-grid"><label>Claim type<select name="type" [(ngModel)]="draft.type"><option>MOTOR</option><option>PROPERTY</option></select></label>
+          <label>Market<select name="market" [(ngModel)]="draft.market">@for (market of markets; track market) { <option>{{ market }}</option> }</select></label>
+          <label>Incident date<input type="date" name="date" [(ngModel)]="draft.incidentDate" required></label>
+          <label>Estimated loss (market currency)<input type="number" name="amount" [(ngModel)]="draft.estimatedAmount" min="0.01" max="999999999.99" step="0.01" required></label></div>
+        <label>What happened?<textarea name="description" [(ngModel)]="draft.description" required maxlength="2000" rows="3"></textarea></label>
+        <button [disabled]="busy || claimForm.invalid">Submit claim</button>
+      </form></section>
+    }
+    <div class="workspace"><section><div class="section-heading"><h2>{{ user.role === 'OFFICER' ? 'Claims queue' : 'Your claims' }}</h2><button class="secondary" (click)="manualRefresh()" [disabled]="busy">Refresh</button></div>
+      <label>Filter by status<select [(ngModel)]="filter"><option value="">All statuses</option>@for (status of statuses; track status) { <option [value]="status">{{ status.replaceAll('_', ' ') }}</option> }</select></label>
+      <p class="muted">Updates every 10 seconds.</p>
+      @for (claim of visibleClaims; track claim.id) {
+        <button class="claim-row" [class.selected]="selected?.id === claim.id" (click)="select(claim)" [disabled]="busy"><span>{{ claim.type }} · {{ claim.market }}</span><span class="badge">{{ claim.status.replaceAll('_', ' ') }}</span><span>{{ claim.currency }} {{ claim.estimatedAmount | number:'1.2-2' }}</span><small>{{ claim.id.slice(0, 8) }} · {{ claim.assignedOfficer || 'Unassigned' }}</small></button>
+      } @empty { <p>No claims to display.</p> }
+    </section><section>
+      @if (selected; as claim) {
+        <h2>Claim details</h2><p class="reference">Reference: {{ claim.id }}</p><p><span class="badge">{{ claim.status.replaceAll('_', ' ') }}</span></p>
+        <p>{{ claim.description }}</p><dl><dt>Incident</dt><dd>{{ claim.incidentDate }}</dd><dt>Estimated loss</dt><dd>{{ claim.currency }} {{ claim.estimatedAmount | number:'1.2-2' }}</dd><dt>Assigned officer</dt><dd>{{ claim.assignedOfficer || 'Awaiting assignment' }}</dd>
+          @if (claim.settlementAmount !== null) { <dt>Settlement</dt><dd>{{ claim.currency }} {{ claim.settlementAmount | number:'1.2-2' }}</dd> }</dl>
+        @if (user.role === 'OFFICER' && claim.status === 'SUBMITTED') { <button (click)="act('assign')" [disabled]="busy">Pick up claim</button> }
+        @if ((user.role === 'CLAIMANT' && claim.status === 'INFORMATION_REQUIRED') || (user.role === 'OFFICER' && claim.assignedOfficer === user.username && claim.status === 'UNDER_REVIEW')) {
+          <label>{{ user.role === 'CLAIMANT' ? 'Additional information' : 'Assessment / request / decision reason' }}<textarea [(ngModel)]="message" maxlength="2000" rows="3"></textarea></label>
+          @if (user.role === 'CLAIMANT') { <button (click)="act('information')" [disabled]="busy || !message.trim()">Send information</button> }
+          @else {
+            <label>Settlement amount ({{ claim.currency }})<input type="number" [(ngModel)]="settlementAmount" min="0.01" max="999999999.99" step="0.01"></label>
+            <div class="actions"><button class="secondary" (click)="act('request-information')" [disabled]="busy || !message.trim()">Request information</button><button (click)="act('SETTLED')" [disabled]="busy || !message.trim() || settlementAmount <= 0">Settle</button><button class="danger" (click)="act('REJECTED')" [disabled]="busy || !message.trim()">Reject</button></div>
+          }
+        }
+        <h3>Claim history</h3><ol class="history">@for (entry of claim.history; track $index) { <li><strong>{{ entry.status.replaceAll('_', ' ') }}</strong><p>{{ entry.message }}</p><small>{{ entry.actor }} · {{ entry.occurredAt | date:'medium' }}</small></li> }</ol>
+      } @else { <h2>Claim details</h2><p>Select a claim to view its progress and history.</p> }
+    </section></div>
+  }
+</main>
