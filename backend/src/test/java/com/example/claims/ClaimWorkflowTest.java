@@ -8,9 +8,13 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.test.context.support.WithMockUser;
 import java.math.BigDecimal;
 import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -22,6 +26,31 @@ class ClaimWorkflowTest {
     @Autowired ObjectMapper json;
     @Autowired ClaimRepository claims;
     @Autowired OutboxRepository outbox;
+    @Autowired ClaimService service;
+
+    @Test
+    @WithMockUser(username = "claimant", roles = "CLAIMANT")
+    void serviceRejectsOfficerOperationsWithoutTheHttpController() {
+        var actor = SecurityContextHolder.getContext().getAuthentication();
+        var id = java.util.UUID.randomUUID();
+        var change = new ApiModels.Change(0L, "Review");
+        // Direct bean calls demonstrate that endpoint filters are not the only role boundary.
+        assertThatThrownBy(() -> service.assign(id, change, actor)).isInstanceOf(AccessDeniedException.class);
+        assertThatThrownBy(() -> service.requestInformation(id, change, actor)).isInstanceOf(AccessDeniedException.class);
+        assertThatThrownBy(() -> service.decide(id, new ApiModels.Decision(0L, Claim.Status.REJECTED, "Reason", null), actor))
+            .isInstanceOf(AccessDeniedException.class);
+        assertThatThrownBy(() -> service.dashboard()).isInstanceOf(AccessDeniedException.class);
+    }
+
+    @Test
+    @WithMockUser(username = "officer", roles = "OFFICER")
+    void serviceRejectsClaimantOperationsWithoutTheHttpController() {
+        var actor = SecurityContextHolder.getContext().getAuthentication();
+        var request = new ApiModels.Submit(Claim.Type.MOTOR, "MY", java.time.LocalDate.of(2026, 1, 1), "Damage", BigDecimal.TEN);
+        assertThatThrownBy(() -> service.submit(request, actor)).isInstanceOf(AccessDeniedException.class);
+        assertThatThrownBy(() -> service.provideInformation(java.util.UUID.randomUUID(), new ApiModels.Change(0L, "Details"), actor))
+            .isInstanceOf(AccessDeniedException.class);
+    }
 
     @Test
     void fullInformationAndSettlementFlowHasHistoryAndAtomicEvents() throws Exception {

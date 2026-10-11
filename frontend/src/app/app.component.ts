@@ -5,6 +5,10 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ApiService } from './api.service';
 import { Claim, Dashboard, SubmitClaim, User } from './models';
 
+/**
+ * Coordinates the small claimant/officer screen using ordinary properties and template-driven forms.
+ * UI role conditions control visibility; the backend independently enforces access and lifecycle rules.
+ */
 @Component({ selector: 'app-root', standalone: true, imports: [CommonModule, FormsModule], templateUrl: './app.component.html' })
 export class AppComponent implements OnDestroy {
   private api = inject(ApiService);
@@ -35,6 +39,7 @@ export class AppComponent implements OnDestroy {
   }
   ngOnDestroy() { clearInterval(this.timer); }
   async refresh() {
+    // Avoid overlapping polls. REST reads committed state; it does not wait for Kafka publication.
     if (this.refreshing || !this.user) return;
     this.refreshing = true;
     try {
@@ -60,6 +65,8 @@ export class AppComponent implements OnDestroy {
     });
   }
   private async run(work: () => Promise<void>) {
+    // Block repeated clicks while a request is active and restore controls even after a failure.
+    // This is a UI safeguard; server-side idempotency is still needed for retries after lost responses.
     if (this.busy) return;
     this.busy = true; this.error = ''; this.notice = '';
     try { await work(); } catch (e) { this.showError(e); } finally { this.busy = false; }

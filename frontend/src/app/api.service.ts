@@ -3,6 +3,10 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { Claim, Dashboard, SubmitClaim, User } from './models';
 
+/**
+ * Typed REST boundary for the screen. Converts one-response Observables to Promises for async/await.
+ * Relative URLs use the development proxy or nginx so credentials stay on the application's origin.
+ */
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private http = inject(HttpClient);
@@ -16,6 +20,7 @@ export class ApiService {
   dashboard() { return firstValueFrom(this.http.get<Dashboard>('/api/officer/dashboard', this.options())); }
   submit(claim: SubmitClaim) { return firstValueFrom(this.http.post<Claim>('/api/claims', claim, this.options())); }
   change(claim: Claim, action: string, message: string, settlementAmount?: number) {
+    // Send the latest observed version; a concurrent/stale edit receives HTTP 409 from the backend.
     const url = action === 'information' ? `/api/claims/${claim.id}/information`
       : `/api/officer/claims/${claim.id}/${action === 'SETTLED' || action === 'REJECTED' ? 'decision' : action}`;
     const body = action === 'SETTLED' || action === 'REJECTED'

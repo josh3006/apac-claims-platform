@@ -1,5 +1,13 @@
 # Validation record — 2026-10-08
 
+## 2026-10-12 review update
+
+- User reported that the application works. This is separate from the original environment-specific checks below.
+- `mvn -s settings-local.xml -B test` on Java 21: **7 tests, 0 failures, 0 errors, 0 skipped**. Two new tests exercise the service bean directly to verify role denial without relying on controller filters; the existing workflow and publisher tests still pass.
+- `scripts/npm.ps1 run build` on Node 22: passed with strict TypeScript/template checking. No UI flow was changed in this review.
+- `git diff --check`: passed.
+- The new documentation and service authorization checks do not establish production or regulatory compliance. PostgreSQL/Kafka/browser verification remains separate from these checks.
+
 ## Passed
 
 - `mvn -s settings-local.xml -B package` using installed Java 21.0.10: application compiled, all three workflow tests passed, executable jar produced.

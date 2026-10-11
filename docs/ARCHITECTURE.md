@@ -48,6 +48,7 @@ Delivery is **at least once**: if the process crashes after Kafka acknowledges b
 - `BigDecimal` and decimal database columns preserve monetary precision. UI numbers are only input/display values.
 - Mutations require the last observed claim `version`. JPA `@Version` also catches competing commits. Stale edits return 409 and require a refresh.
 - Spring Security enforces officer endpoint access. Claimants see only their own claims; another claimant's UUID returns 404.
+- Service method authorization also enforces claimant/officer roles for calls through the Spring bean, including callers outside the REST controller. Ownership remains a per-claim service check.
 - Demo HTTP Basic accounts are in memory, with BCrypt password hashes. API is stateless, uses explicit Authorization headers, and has no cookie-based session. CSRF is disabled for that API model. Browser-native Basic-auth reuse and a production deployment would require a fresh CSRF/authentication review.
 - Local HTTP demo only. Production requires TLS, OIDC, real user provisioning, secrets management, and identity-derived ownership.
 - API response DTOs keep persistence internals separate. Kafka payloads omit free-text descriptions, claimant information, and assessment messages.

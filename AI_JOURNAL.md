@@ -34,3 +34,13 @@ Actual command results are recorded in `docs/VALIDATION.md` after execution. Do 
 - The real Basic-auth test caught missing `{bcrypt}` prefixes for Spring's delegating password encoder. AI corrected the stored encoded password format.
 - Angular compilation caught an incorrect bootstrap configuration shape. AI passed `{ providers: [...] }` rather than a provider array.
 - No browser was connected (runtime discovery returned no available browsers); browser interaction remains unverified. AI did not claim UI testing from compilation.
+
+## 2026-10-12 - documentation and engineering review
+
+- User reported that the application works and requested standard code comments plus suggestions for a financial-system context.
+- AI added class/operation documentation and comments explaining business constraints, transactions, concurrency, money, security boundaries, and outbox delivery. It made service mutation code easier to review without changing the claim contract.
+- AI added method-level role checks and direct-service authorization tests so future non-controller callers also receive role enforcement.
+- AI recorded coding conventions and a prioritised improvement plan. Larger changes (identity, migrations, idempotency, audit infrastructure, integrations, approvals) are recommendations, not implemented controls.
+- The original domain remains insurance claims. No banking-compliance claim or invented mandatory approval threshold was added.
+- User's successful application run is user-reported; earlier Docker/browser limitations remain historical records of the AI environment. New verification results are recorded in `docs/VALIDATION.md`.
+- Verification after the update: all seven backend tests passed; Angular production compilation passed; `git diff --check` passed.

@@ -11,7 +11,13 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-// One publisher instance in the demo. Delivery is at-least-once; consumers deduplicate by eventId.
+/**
+ * Publishes durable claim-change events without blocking claim transactions.
+ *
+ * <p>Runs as a single instance in this demo. Delivery is at least once: a crash after Kafka
+ * acknowledgement but before the publication marker is saved can replay an event. Consumers
+ * must deduplicate by eventId. Multiple publisher instances would need row leasing or locking.</p>
+ */
 @Component
 @ConditionalOnProperty(name = "app.events-enabled", havingValue = "true")
 class OutboxPublisher {
@@ -29,9 +35,12 @@ class OutboxPublisher {
                 String payload = json.writeValueAsString(Map.of("eventId", event.id, "eventType", "CLAIM_CHANGED",
                     "schemaVersion", 1, "claimId", event.claimId, "claimVersion", event.claimVersion,
                     "status", event.status, "occurredAt", event.occurredAt));
+                // Event payloads exclude claimant descriptions and correspondence to limit data exposure.
+                // Wait for acknowledgement before marking published; Kafka's key groups one claim's events.
                 kafka.send("claim-events", event.claimId.toString(), payload).get(12, TimeUnit.SECONDS);
                 event.publishedAt = Instant.now(); events.save(event);
             } catch (InterruptedException e) {
+                // Preserve cancellation so shutdown can stop the publisher promptly.
                 Thread.currentThread().interrupt(); return;
             } catch (Exception e) {
                 log.warn("Event {} remains pending: {}", event.id, e.getClass().getSimpleName());

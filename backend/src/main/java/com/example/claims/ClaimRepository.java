@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.UUID;
 
+/** Persistence queries; claimant filtering limits records before DTOs are constructed. */
 interface ClaimRepository extends JpaRepository<Claim, UUID> {
     List<Claim> findAllByOrderByCreatedAtDesc();
     List<Claim> findByClaimantOrderByCreatedAtDesc(String claimant);

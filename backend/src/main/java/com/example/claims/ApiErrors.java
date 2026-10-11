@@ -10,6 +10,10 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Maps expected API failures to safe client messages and stable HTTP statuses.
+ * Authentication/filter errors occur outside controller advice; the Angular client handles them separately.
+ */
 @RestControllerAdvice
 class ApiErrors {
     @ExceptionHandler(ResponseStatusException.class)

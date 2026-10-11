@@ -86,6 +86,8 @@ The helper uses the ignored project-local Node 22 if available, otherwise the in
 - [Panel walkthrough](docs/WALKTHROUGH.md): demo script and questions to prepare.
 - [AI journal](AI_JOURNAL.md): actual prompts/choices and space for your personal review decisions.
 - [Validation](docs/VALIDATION.md): what actually ran and what remains unverified.
+- [Coding conventions](docs/CODING_STANDARDS.md): Java/Angular comments and review practices.
+- [Improvement plan](docs/IMPROVEMENT_PLAN.md): prioritised reliability/security work and acceptance evidence.
 
 ## Checks
 

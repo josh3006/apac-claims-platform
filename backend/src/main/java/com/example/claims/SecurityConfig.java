@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
@@ -12,7 +13,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
+/**
+ * Configures local demo identities and stateless HTTP authentication.
+ * Endpoint checks and service method checks both enforce roles; claim ownership stays in the service.
+ */
 @Configuration
+@EnableMethodSecurity
 class SecurityConfig {
     @Bean
     UserDetailsService users(@Value("${app.claimant-password}") String claimantPassword,
@@ -25,7 +31,8 @@ class SecurityConfig {
 
     @Bean
     SecurityFilterChain security(HttpSecurity http) throws Exception {
-        // API uses explicitly supplied Authorization headers; no cookie/session authentication.
+        // The Angular demo supplies Authorization headers explicitly and does not use sessions.
+        // Reassess CSRF protection when introducing browser-managed credentials or cookie-based login.
         return http.csrf(csrf -> csrf.disable())
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(a -> a.requestMatchers("/actuator/health").permitAll()

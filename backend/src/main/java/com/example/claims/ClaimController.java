@@ -9,6 +9,10 @@ import java.util.Map;
 import java.util.UUID;
 import static com.example.claims.ApiModels.*;
 
+/**
+ * Maps HTTP requests to claim operations without implementing lifecycle rules.
+ * Bean Validation checks request shapes; Spring Security supplies the authenticated principal.
+ */
 @RestController
 @RequestMapping("/api")
 class ClaimController {
