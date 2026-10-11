@@ -71,6 +71,8 @@ The helper uses the ignored project-local Node 22 if available, otherwise the in
 
 ## What to demonstrate
 
+For a database from the original Hibernate-managed version, follow the [existing-data migration guide](docs/DATABASE_MIGRATIONS.md) before starting the updated backend. Automatic baselining is disabled by default.
+
 1. Sign in as claimant, submit a motor or property claim, inspect the reference and history.
 2. Open a second browser window and sign in as officer. Pick up the claim.
 3. Request information with a reason. The claimant sees the change on refresh or within 10 seconds.
@@ -88,6 +90,7 @@ The helper uses the ignored project-local Node 22 if available, otherwise the in
 - [Validation](docs/VALIDATION.md): what actually ran and what remains unverified.
 - [Coding conventions](docs/CODING_STANDARDS.md): Java/Angular comments and review practices.
 - [Improvement plan](docs/IMPROVEMENT_PLAN.md): prioritised reliability/security work and acceptance evidence.
+- [Database migrations](docs/DATABASE_MIGRATIONS.md): fresh startup and safe adoption of existing data.
 
 ## Checks
 
@@ -97,6 +100,7 @@ mvn -s settings-local.xml test
 # From frontend:
 npm ci
 npm run build
+npm run test:submission
 # From repository root:
 docker compose config --quiet
 ```

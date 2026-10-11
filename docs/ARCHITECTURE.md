@@ -63,9 +63,9 @@ The six market codes MY/SG/HK/TH/ID/VN and their currencies are demo assumptions
 
 1. No policy or attachment model. Add policy/coverage validation and secure document storage before real claims processing.
 2. In-memory demo identity. Replace with OIDC and multi-user tests using real identities.
-3. JPA schema `update` for local speed. Introduce Flyway migrations and PostgreSQL integration tests before production.
+3. Flyway V1/V2 owns the schema; Hibernate validates it. Legacy adoption requires backup, review, and explicit baseline opt-in. PostgreSQL integration verification is still pending.
 4. Lists and dashboard aggregate in memory. Add pagination, filters, database aggregation, and indexes as volume grows.
-5. No submit idempotency key. A client retry after a lost response can duplicate a claim. Add a persisted idempotency key per claimant.
+5. Submissions require a UUID key. A durable claimant/key receipt replays the original response and rejects changed payloads; database uniqueness prevents concurrent duplicates. Retention and browser reload recovery remain future work.
 6. Single outbox publisher; no consumer, metrics, or dead-letter policy. Add deduplication-aware notifications, backlog monitoring, row leasing, and retention.
 7. Single Angular component and simple polling. Add browser tests, extract components, and consider SSE if near-instant updates matter.
 8. History messages are visible to both roles. Separate internal notes from claimant-visible correspondence in a richer model.

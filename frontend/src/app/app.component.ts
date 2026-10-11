@@ -21,6 +21,7 @@ export class AppComponent implements OnDestroy {
   draft: SubmitClaim = this.emptyDraft();
   private timer?: ReturnType<typeof setInterval>;
   private refreshing = false;
+  private pendingSubmission: { key: string; payload: string } | null = null;
   get visibleClaims() { return this.claims.filter(c => !this.filter || c.status === this.filter); }
   private emptyDraft(): SubmitClaim { return { type: 'MOTOR', market: 'MY', incidentDate: '', description: '', estimatedAmount: 0 }; }
 
@@ -36,6 +37,7 @@ export class AppComponent implements OnDestroy {
   logout() {
     clearInterval(this.timer); this.api.clearCredentials(); this.user = null;
     this.claims = []; this.selected = null; this.dashboard = null; this.message = ''; this.error = ''; this.notice = '';
+    this.pendingSubmission = null;
   }
   ngOnDestroy() { clearInterval(this.timer); }
   async refresh() {
@@ -52,8 +54,18 @@ export class AppComponent implements OnDestroy {
   select(claim: Claim) { this.selected = claim; this.message = ''; this.settlementAmount = claim.estimatedAmount; this.notice = ''; }
   async submit() {
     await this.run(async () => {
-      const claim = await this.api.submit(this.draft); this.draft = this.emptyDraft();
-      await this.refresh(); this.select(claim); this.notice = 'Claim submitted. Keep the reference below.';
+      // Retain the key after a lost response. Editing the payload starts a different submission.
+      const payload = JSON.stringify(this.draft);
+      if (!this.pendingSubmission || this.pendingSubmission.payload !== payload) {
+        this.pendingSubmission = { key: crypto.randomUUID(), payload };
+      }
+      const claim = await this.api.submit(this.draft, this.pendingSubmission.key);
+      this.pendingSubmission = null;
+      this.draft = this.emptyDraft();
+      await this.refresh();
+      // A replay returns the original receipt; the refreshed list may have a newer status/version.
+      this.select(this.claims.find(current => current.id === claim.id) ?? claim);
+      this.notice = 'Claim submitted. Keep the reference below.';
     });
   }
   async act(action: string) {
@@ -66,7 +78,7 @@ export class AppComponent implements OnDestroy {
   }
   private async run(work: () => Promise<void>) {
     // Block repeated clicks while a request is active and restore controls even after a failure.
-    // This is a UI safeguard; server-side idempotency is still needed for retries after lost responses.
+    // Submission also uses a durable backend receipt to deduplicate retries after lost responses.
     if (this.busy) return;
     this.busy = true; this.error = ''; this.notice = '';
     try { await work(); } catch (e) { this.showError(e); } finally { this.busy = false; }

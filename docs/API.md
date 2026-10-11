@@ -5,7 +5,7 @@ All endpoints except `/actuator/health` require HTTP Basic credentials. JSON req
 | Method | Path | Role | Purpose |
 | --- | --- | --- | --- |
 | GET | `/api/me` | Either | Username and role |
-| POST | `/api/claims` | Claimant | Submit incident; returns 201 |
+| POST | `/api/claims` | Claimant | Submit incident; 201 or 200 for a replay |
 | GET | `/api/claims` | Either | Claimant's own claims or officer's full queue |
 | GET | `/api/claims/{id}` | Either | Visible claim with history |
 | POST | `/api/claims/{id}/information` | Owning claimant | Respond to requested information |
@@ -15,6 +15,15 @@ All endpoints except `/actuator/health` require HTTP Basic credentials. JSON req
 | GET | `/api/officer/dashboard` | Officer | Status counts, workload, exposure, settlements |
 
 ## Submission
+
+Required header: `Idempotency-Key: <UUID>`. Generate one key for a logical submission and retain it for retries. Missing/malformed keys return 400. Angular supplies the header automatically; other clients must include it.
+
+- First success: 201, `Idempotency-Replayed: false`.
+- Same claimant/key and equivalent payload: 200, `Idempotency-Replayed: true`, original response, no extra claim/history/event.
+- Same claimant/key with different payload: 409. Each claimant has an independent key namespace.
+- Failed submissions roll back the receipt and claim/event changes, so a corrected request can retry the key.
+
+A database unique constraint handles concurrent requests across instances. Decimal notation is normalised (`100` equals `100.00`); other fields are compared exactly via a fingerprint. Receipts survive restart and replay the original snapshot even if assessment has progressed. Use GET for current status/version. Receipts have no automatic expiry.
 
 ```json
 {
@@ -54,7 +63,7 @@ For rejection, use `status: "REJECTED"` and omit `settlementAmount` or send null
 | 401 | Missing or incorrect credentials |
 | 403 | Wrong role or not the assigned officer |
 | 404 | Missing claim or inaccessible claimant-owned claim |
-| 409 | Stale version or disallowed lifecycle transition |
+| 409 | Stale version, disallowed transition, or submission key reused with a different payload |
 
 Controller/service errors have `{ "message": "..." }`. Authentication/authorization filter failures may use Spring's standard empty/error response rather than that shape; the frontend has fallbacks.
 

@@ -19,11 +19,12 @@
 - Is exposure a financial reserve? No. It is an explicitly labelled sum of submitted estimates, separated by currency.
 - Why a single Angular component? Small scope and easier personal comprehension. Extract components once feature growth justifies it.
 - Why polling? Easy to inspect and adequate for a prototype. SSE would suit lower-latency updates without connecting browsers to Kafka.
-- What happens if claim submission times out? Without an idempotency key, a retry may duplicate it. This is a documented next priority.
+- What happens if submission times out? Retry with the same key and unchanged payload. A durable receipt returns the original result; a changed payload gets 409. Angular retains keys in memory but does not support recovery across reloads.
+- How do schema changes roll out? Flyway applies versioned SQL; Hibernate validates. Existing schemas need backup/review and explicit baseline adoption.
 
 ## More time: prioritised work
 
-Start with Docker/PostgreSQL/Kafka integration verification if still pending. Then production identity, policy/coverage checks, idempotent submission, schema migrations, and secure attachments. Add notifications with consumer deduplication, outbox monitoring, pagination, SLA metrics, and browser tests.
+Start with Docker/PostgreSQL/Kafka verification if pending. Then production identity, policy checks, receipt retention/reload recovery, database constraints, and attachments. Add notifications with deduplication, outbox monitoring, pagination, SLA metrics, and browser tests.
 
 ## Your own review
 

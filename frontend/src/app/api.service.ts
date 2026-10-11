@@ -18,7 +18,10 @@ export class ApiService {
   me() { return firstValueFrom(this.http.get<User>('/api/me', this.options())); }
   claims() { return firstValueFrom(this.http.get<Claim[]>('/api/claims', this.options())); }
   dashboard() { return firstValueFrom(this.http.get<Dashboard>('/api/officer/dashboard', this.options())); }
-  submit(claim: SubmitClaim) { return firstValueFrom(this.http.post<Claim>('/api/claims', claim, this.options())); }
+  submit(claim: SubmitClaim, key: string) {
+    const headers = this.options().headers.set('Idempotency-Key', key);
+    return firstValueFrom(this.http.post<Claim>('/api/claims', claim, { headers }));
+  }
   change(claim: Claim, action: string, message: string, settlementAmount?: number) {
     // Send the latest observed version; a concurrent/stale edit receives HTTP 409 from the backend.
     const url = action === 'information' ? `/api/claims/${claim.id}/information`

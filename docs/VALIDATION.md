@@ -1,5 +1,16 @@
 # Validation record — 2026-10-08
 
+## 2026-10-12 Flyway and idempotency update (uncommitted)
+
+- `mvn -s settings-local.xml -B package`: **15 tests, 0 failures, 0 errors, 0 skipped**, executable jar built. Workflow tests now run against a Flyway-created schema with Hibernate validation.
+- Five submission tests cover original-response replay, amount normalisation, changed-payload conflict, claimant scoping, missing/malformed keys, failed-request rollback, and four simultaneous retries producing one claim/event.
+- Three migration tests cover fresh startup/no-op restart, V1-to-V2 data preservation, and explicit baseline adoption of an actual Hibernate-generated legacy H2 schema. Claim amount, history, and pending outbox entries survive; Flyway clean is disabled.
+- `scripts/npm.ps1 run test:submission`: passed. Focused frontend checks cover key reuse after a lost response, reset after success/edit/sign-out, and sending the key with authentication. These are state/HTTP-boundary checks, not browser rendering tests.
+- `scripts/npm.ps1 run build`: passed with strict TypeScript/template checking.
+- Live jar on port 18082 using an isolated file database under `backend/target`: full workflow smoke passed; first submission returned 201 and retry returned 200 with the same response. Stopping/restarting the process preserved the receipt and replayed the identical result; Flyway reported no pending migrations on restart.
+- `docker compose config --quiet`: passed. Docker engine access remains denied, so actual PostgreSQL/Flyway/Kafka integration is unverified.
+- No live user database was modified, and no Git commit or push was performed.
+
 ## 2026-10-12 review update
 
 - User reported that the application works. This is separate from the original environment-specific checks below.

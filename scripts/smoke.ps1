@@ -7,6 +7,7 @@ function New-DemoHeaders([string]$User, [string]$Password) {
 }
 $claimantHeaders = New-DemoHeaders 'claimant' 'claimant-demo'
 $officerHeaders = New-DemoHeaders 'officer' 'officer-demo'
+$claimantHeaders['Idempotency-Key'] = [guid]::NewGuid().ToString()
 function Send-Json([string]$Path, $Body, $Headers) {
     Invoke-RestMethod -Uri "$BaseUrl$Path" -Method Post -Headers $Headers -ContentType 'application/json' -Body ($Body | ConvertTo-Json)
 }

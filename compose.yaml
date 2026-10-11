@@ -45,6 +45,7 @@ services:
       EVENTS_ENABLED: 'true'
       CLAIMANT_PASSWORD: ${CLAIMANT_PASSWORD:-claimant-demo}
       OFFICER_PASSWORD: ${OFFICER_PASSWORD:-officer-demo}
+      FLYWAY_BASELINE_ON_MIGRATE: ${FLYWAY_BASELINE_ON_MIGRATE:-false}
     ports:
       - '127.0.0.1:8080:8080'
     depends_on:

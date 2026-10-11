@@ -38,11 +38,13 @@ The screen uses normal properties, not signals: `claims`, `selected`, `user`, `b
 1. The form fields bind to `draft` in `AppComponent`.
 2. `(ngSubmit)="submit()"` calls the component method.
 3. `run(...)` sets `busy`, clears messages, catches errors, and restores `busy` in `finally`.
-4. `api.submit(draft)` calls `HttpClient.post<Claim>('/api/claims', ...)`.
+4. The component creates a UUID for the logical submission. `api.submit(draft, key)` calls `HttpClient.post<Claim>('/api/claims', ...)` with `Idempotency-Key`.
 5. Angular HttpClient returns an Observable. `firstValueFrom` converts this one-response stream into a Promise, so the component can use familiar `async` / `await`.
 6. The development proxy or Docker nginx forwards the request to Spring Boot.
 7. The API validates and saves the claim, history, and outbox event in one transaction.
 8. The component refreshes the list and displays the submitted claim.
+
+If a response is lost, the component keeps the key while the draft is unchanged. Retrying returns the persisted original result. Editing the draft, success, or signing out resets the key. It is kept in memory: a page reload loses the pending key; cross-reload recovery is not implemented. `npm run test:submission` verifies these rules and the HTTP header without requiring a browser.
 
 TypeScript interfaces disappear at runtime; `post<Claim>` is not runtime JSON validation. The backend DTOs are the source of truth for validation. If you change a backend response field, update `models.ts` and the template together.
 

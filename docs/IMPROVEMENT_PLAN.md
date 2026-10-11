@@ -15,8 +15,8 @@ The brief is for an insurance claims platform. The following are proposed engine
 | Priority | Current finding | Proposed improvement | Useful acceptance evidence |
 | --- | --- | --- | --- |
 | 1 | Shared in-memory demo accounts and local HTTP | Real identity via OIDC, TLS, least-privilege roles, external secrets; review CSRF for the chosen login model | Two distinct claimants cannot read/change each other's data; revoked/expired identities are denied |
-| 2 | Schema uses Hibernate `update`; many invariants exist only in request validation | Flyway migrations, required-column/check constraints, and appropriate indexes | Existing data survives upgrade; invalid database writes are rejected; PostgreSQL integration tests pass |
-| 3 | A lost submission response can lead to a duplicate claim on retry | Persist an idempotency key scoped to claimant and request payload | Same key/payload returns the original result; changed payload is rejected; concurrent retries create one claim |
+| 2 | Flyway V1/V2 and validation are implemented; domain invariants mostly remain in request validation | Extend database checks and verify on PostgreSQL | Existing data survives; invalid database writes are rejected; PostgreSQL tests pass |
+| 3 | Durable receipts handle retries/concurrency; Angular keeps a key during an unchanged draft | Agree retention and cross-reload recovery | Deduplication window is explicit; restart recovery does not expose sensitive drafts |
 | 4 | History is mutable database storage; no dedicated security audit or request tracing | Structured audit events and request IDs, restricted access/retention, separate internal notes from claimant correspondence | An action can be traced to its actor; no credentials or sensitive request bodies appear in logs |
 | 5 | Current automated workflow checks use H2 and publisher mocks | PostgreSQL/Kafka integration tests and a small browser smoke suite | Real database constraints/concurrency, broker outage/recovery, and both UI roles verified |
 | 6 | Publisher has one-instance assumptions, unlimited retry lifetime, and no backlog monitoring | Outbox leasing/ordering, delivery metrics, retry/dead-letter policy, event deduplication and retention | Multiple publishers do not race; replay is safe; stuck delivery raises an observable signal |
@@ -27,7 +27,7 @@ The approval policy and thresholds must come from domain stakeholders. A second 
 
 ## Keep the assessment focused
 
-For a small follow-up increment, prioritise idempotent submission plus database migrations and their tests. These demonstrate reliability without making Angular harder to understand. Introducing microservices would not resolve the specific gaps above.
+The selected follow-up implemented idempotent submission and migrations with tests. Next, verify migration/concurrency on real PostgreSQL. Introducing microservices would not resolve the gaps above.
 
 An additional frontend fix worth scheduling is cancellation/session guarding for in-flight polling: a response that completes after sign-out should not repopulate screen state. Keep the single-component structure until growth warrants extraction.
 

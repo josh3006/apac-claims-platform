@@ -3,6 +3,7 @@ package com.example.claims;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.*;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -25,6 +26,10 @@ class ApiErrors {
         String message = e.getBindingResult().getFieldErrors().stream()
             .map(f -> f.getField() + ": " + f.getDefaultMessage()).collect(Collectors.joining("; "));
         return ResponseEntity.badRequest().body(Map.of("message", message));
+    }
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    ResponseEntity<?> missingHeader(MissingRequestHeaderException e) {
+        return ResponseEntity.badRequest().body(Map.of("message", "Idempotency-Key header is required for claim submission"));
     }
     @ExceptionHandler({HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class})
     ResponseEntity<?> malformed(Exception e) { return ResponseEntity.badRequest().body(Map.of("message", "Invalid request format")); }

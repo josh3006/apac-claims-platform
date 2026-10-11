@@ -19,7 +19,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest(properties = {"spring.datasource.url=jdbc:h2:mem:workflow;DB_CLOSE_DELAY=-1", "spring.jpa.hibernate.ddl-auto=create-drop", "app.events-enabled=false"})
+@SpringBootTest(properties = {"spring.datasource.url=jdbc:h2:mem:workflow;DB_CLOSE_DELAY=-1", "app.events-enabled=false"})
 @AutoConfigureMockMvc
 class ClaimWorkflowTest {
     @Autowired MockMvc mvc;
@@ -88,12 +88,15 @@ class ClaimWorkflowTest {
         mvc.perform(get("/api/officer/dashboard").with(user("claimant").roles("CLAIMANT"))).andExpect(status().isForbidden());
         for (String amount : new String[]{"-1", "0", "1.123", "1000000000"}) {
             mvc.perform(post("/api/claims").with(user("claimant").roles("CLAIMANT"))
+                .header("Idempotency-Key", java.util.UUID.randomUUID())
                 .contentType("application/json").content(submitBody("MY", amount))).andExpect(status().isBadRequest());
         }
         mvc.perform(post("/api/claims").with(user("claimant").roles("CLAIMANT"))
+            .header("Idempotency-Key", java.util.UUID.randomUUID())
             .contentType("application/json").content(submitBody("XX", "10"))).andExpect(status().isBadRequest());
         mvc.perform(get("/api/claims/not-a-uuid").with(user("claimant").roles("CLAIMANT"))).andExpect(status().isBadRequest());
         mvc.perform(post("/api/claims").with(user("claimant").roles("CLAIMANT"))
+            .header("Idempotency-Key", java.util.UUID.randomUUID())
             .contentType("application/json").content(submitBody("MY", "10").replace("2026-01-01", "2099-01-01"))).andExpect(status().isBadRequest());
     }
 
@@ -122,6 +125,7 @@ class ClaimWorkflowTest {
 
     private JsonNode submit(String market, String amount) throws Exception {
         return perform(post("/api/claims").with(user("claimant").roles("CLAIMANT"))
+            .header("Idempotency-Key", java.util.UUID.randomUUID())
             .contentType("application/json").content(submitBody(market, amount)), 201);
     }
     private String submitBody(String market, String amount) throws Exception {

@@ -44,3 +44,13 @@ Actual command results are recorded in `docs/VALIDATION.md` after execution. Do 
 - The original domain remains insurance claims. No banking-compliance claim or invented mandatory approval threshold was added.
 - User's successful application run is user-reported; earlier Docker/browser limitations remain historical records of the AI environment. New verification results are recorded in `docs/VALIDATION.md`.
 - Verification after the update: all seven backend tests passed; Angular production compilation passed; `git diff --check` passed.
+
+## 2026-10-12 - Flyway and idempotent submission (local only)
+
+- User initially selected Flyway and idempotent claim submission for local changes only. After reviewing the result, the user explicitly authorised committing and pushing the changes.
+- AI added V1/V2 SQL and changed Hibernate to validate. Legacy adoption requires backup/review and a one-time explicit baseline at version 1. The live database was not modified.
+- AI added durable receipts per claimant/UUID key, request fingerprints, original-response replay, changed-payload conflicts, and database uniqueness for concurrent retries.
+- A separate transactional worker lets a duplicate-key transaction finish rolling back before a new transaction reads the receipt. Claim, history, outbox, and receipt commit atomically.
+- Angular reuses keys after lost responses and resets them on success, edits, or sign-out; cross-reload recovery is explicitly deferred.
+- Added API/concurrency/rollback/migration-preservation tests and focused frontend retry/header tests. Actual outcomes are recorded in validation documentation.
+- Final checks: 15 backend tests passed, frontend retry/header tests and production build passed, and live file-database replay remained correct after a process restart. Compose configuration passed; Docker engine access is still denied.
